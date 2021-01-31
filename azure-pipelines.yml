@@ -60,9 +60,10 @@ stages:
               steps:
                 - download: current
                 - task: AzureCLI@2
+                  displayName: Deploy to Blob
                   inputs:
                     azureSubscription: 'dam.net.br'
                     scriptType: 'pscore'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
-                      az storage blob upload-batch --account-name mercuriofront --account-key $(AccountKey) -d $web -s "$(Pipeline.Workspace)/drop/build"
+                      az storage blob upload-batch --account-name mercuriofront --account-key $(AccountKey) -d $web -s "$(Pipeline.Workspace)/drop/"
