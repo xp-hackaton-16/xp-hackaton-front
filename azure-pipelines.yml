@@ -29,7 +29,7 @@ steps:
 - task: AzureFileCopy@4
   displayName: 'Deploy to Blob Storage'
   inputs:
-    SourcePath: './dist'
+    SourcePath: './build'
     azureSubscription: 'dam.net.br'
     Destination: 'AzureBlob'
     storage: 'mercuriofront'
