@@ -66,4 +66,5 @@ stages:
                     scriptType: 'pscore'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
-                      az storage blob upload-batch --account-name mercuriofront --account-key $(AccountKey) -d $web -s "$(Pipeline.Workspace)/drop/"
+                      Write-Host "##[command]az storage blob upload-batch --account-name mercuriofront --account-key `"$(AccountKey)`" -d '`$web' -s `"$(Pipeline.Workspace)/drop/`" --pattern `"*.*`""
+                      az storage blob upload-batch --account-name mercuriofront --account-key "$(AccountKey)" -d '$web' -s "$(Pipeline.Workspace)/drop/" --pattern "*.*"
