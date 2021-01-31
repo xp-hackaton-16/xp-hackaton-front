@@ -5,32 +5,60 @@
 
 trigger:
 - main
+- master
 
-pool:
-  vmImage: 'windows-latest'
+stages:
+  - stage: sBuild
+    displayName: Build & Pack
+    jobs:
+      - job: jBuild
+        displayName:  Build & Pack
+        pool:
+          vmImage: 'ubuntu-latest'
+        workspace:
+          clean: all
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '14.x'
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.x'
-  displayName: 'Install Node.js'
+          - task: Npm@1
+            displayName: 'Install dependencies'
+            inputs:
+              command: 'install'
+            
+          - task: Npm@1
+            displayName: 'Build'
+            inputs:
+              command: 'custom'
+              customCommand: 'run build'
+          
+          - task: PublishBuildArtifacts@1
+            displayName: Publish statics
+            inputs:
+              PathtoPublish: './build'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
 
-- task: Npm@1
-  displayName: 'Install dependencies'
-  inputs:
-    command: 'install'
-  
-- task: Npm@1
-  displayName: 'Build'
-  inputs:
-    command: 'custom'
-    customCommand: 'run build'
-
-- task: AzureFileCopy@4
-  displayName: 'Deploy to Blob Storage'
-  inputs:
-    SourcePath: './build'
-    azureSubscription: 'dam.net.br'
-    Destination: 'AzureBlob'
-    storage: 'mercuriofront'
-    ContainerName: '$web'
+  - stage: sDeploy
+    displayName: Deploy to Blob
+    jobs:
+      - deployment: jDeploy
+        environment: 'Hackaton XP'
+        workspace:
+          clean: all
+        strategy:
+          runOnce:
+            deploy:
+              pool:
+                vmImage: 'ubuntu-latest'
+              steps:
+                - download: current
+                - task: AzureFileCopy@4
+                  inputs:
+                    SourcePath: '$(Pipeline.Workspace)/drop/build'
+                    azureSubscription: 'dam.net.br'
+                    Destination: 'AzureBlob'
+                    storage: 'mercuriofront'
+                    ContainerName: '$web'
