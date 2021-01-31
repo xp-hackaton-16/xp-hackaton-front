@@ -7,6 +7,9 @@ trigger:
 - main
 - master
 
+variables:
+  - group: hackatonxp
+
 stages:
   - stage: sBuild
     displayName: Build & Pack
@@ -46,6 +49,7 @@ stages:
     jobs:
       - deployment: jDeploy
         environment: 'Hackaton XP'
+        displayName: Deploy to Blob
         workspace:
           clean: all
         strategy:
@@ -55,10 +59,10 @@ stages:
                 vmImage: 'ubuntu-latest'
               steps:
                 - download: current
-                - task: AzureFileCopy@4
+                - task: AzureCLI@2
                   inputs:
-                    SourcePath: '$(Pipeline.Workspace)/drop/build'
                     azureSubscription: 'dam.net.br'
-                    Destination: 'AzureBlob'
-                    storage: 'mercuriofront'
-                    ContainerName: '$web'
+                    scriptType: 'pscore'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      az storage blob upload-batch --account-name mercuriofront --account-key $(AccountKey) -d $web -s "$(Pipeline.Workspace)/drop/build"
