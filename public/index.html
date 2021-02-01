@@ -29,10 +29,11 @@
 
     <script>
       window.writechart = (id, data) => {
-        console.log({id, chart});
         anychart.graph(data);
         var chart = anychart.graph(data);
         chart.nodes().labels().enabled(true);
+        // configure labels of nodes
+        chart.nodes().labels().format("{%application}");
         chart.container(id);
         chart.draw();
       }

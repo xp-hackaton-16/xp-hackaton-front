@@ -13,43 +13,33 @@ import {
     EuiHealth,  
 } from '@elastic/eui';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { DashboardContainer, StatIcon } from './atoms';
 
 
 const tsToDate = (ts) => {
-  const date = new Date(ts * 1000);
+  const date = new Date(ts);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = date.getMonth().toString().padStart(2, '0');
+  const year = date.getFullYear();
   const hours = date.getHours();
-  const minutes = "0" + date.getMinutes();
-  const seconds = "0" + date.getSeconds();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
 
-  return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
 const columns = [
   {
-    field: 'event',
-    name: 'ID',
-    sortable: true,
-    render: (event) => (
-      <EuiLink href={`/incident/${event.id}`}>
-        {event.id}
-      </EuiLink>
-    ),
-  },
-  {
-    field: 'event',
     name: 'Nome',
-    sortable: true,
     render: (event) => event.properties.application,
   },
   {
-    field: 'event',
     name: 'Mensagem',
     render: (event) => event.properties.message,
   },
   {
-    field: 'event',
     name: 'Severidade',
     render: (event) => {
       const color = event.properties.severity < 3 ? 'success' : 'danger';
@@ -57,48 +47,25 @@ const columns = [
     },
   },
   {
-    field: 'event',
     name: 'Data',
     render: (event) => tsToDate(event.properties.timestamp),
   },
 ];
-
-const getRowProps = (item) => {
-  const { id } = item;
-  return {
-    'data-test-subj': `row-${id}`,
-    className: 'customRowClass',
-    onClick: () => {},
-  };
-};
 
 const getCellProps = (item, column) => {
   const { id } = item;
   const { field } = column;
   return {
     className: 'customCellClass',
-    'data-test-subj': `cell-${id}-${field}`,
     textOnly: true,
   };
 };
 
-
-
 const Dashboard = () => {
+  const history = useHistory();
   const [data, setData] = useState([]);
 
-  useEffect(() => {
-    axios
-      .get("http://hackatonxp.brazilsouth.azurecontainer.io:4001/v1/issue")
-      .then(response => {
-          setData(response.data);
-      })
-      .catch(err => {
-        console.error(err);
-      });
-  }, []);
-
-  const handleClick = () => {
+  const loadIssues = () => {
     axios
       .get("http://hackatonxp.brazilsouth.azurecontainer.io:4001/v1/issue")
       .then(response => {
@@ -108,6 +75,21 @@ const Dashboard = () => {
         console.error(err);
       });
   }
+
+  useEffect(() => {
+    loadIssues();
+  }, []);
+
+  const getRowProps = useCallback((item) => {
+    const { id } = item;
+    return {
+      className: 'customRowClass',
+      onClick: (...args) => {
+        history.push(`/incident/${id}`)
+        console.log(...args);
+      },
+    };
+  }, [history]);
   
   return (
       <DashboardContainer>
@@ -117,7 +99,7 @@ const Dashboard = () => {
                       <h1>Dashboard</h1>
                   </EuiTitle>
               </EuiPageHeaderSection>
-              <EuiPageHeaderSection onClick={handleClick}>
+              <EuiPageHeaderSection onClick={loadIssues}>
                   <EuiButton>Atualizar</EuiButton>
               </EuiPageHeaderSection>
           </EuiPageHeader>
@@ -125,11 +107,11 @@ const Dashboard = () => {
               <EuiFlexItem>
                   <EuiPanel>
                       <EuiStat
-                          title="125"
+                          title={data.length}
                           description="Incidentes hoje"
                           textAlign="left">
                           <StatIcon type="check" color="secondary" />
-                          <EuiTextColor color="secondary">XY% corrigido</EuiTextColor>
+                          <EuiTextColor color="secondary">0% corrigido</EuiTextColor>
                       </EuiStat>
                   </EuiPanel>
               </EuiFlexItem>
@@ -146,7 +128,7 @@ const Dashboard = () => {
               <EuiFlexItem>
                   <EuiPanel>
                       <EuiStat
-                          title="XY"
+                          title="0"
                           description="Incidentes críticos"
                           titleColor="danger"
                           textAlign="left"
