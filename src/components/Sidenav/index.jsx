@@ -22,6 +22,7 @@ const Sidenav = () => {
             name,
             isSelected: selectedItemName === name,
             onClick: () => selectItem(name),
+            href: "/"
         };
     };
 
